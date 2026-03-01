@@ -3,65 +3,81 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Production Logger — track your session notes with timestamps and export to CSV.">
   <title>Production Logger</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: #0f172a;
-      color: #e2e8f0;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
 
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0f172a;
+      color: #f1f5f9;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    /* Header */
     header {
-      width: 100%;
-      padding: 1.25rem 2rem;
-      background: #1e293b;
-      border-bottom: 1px solid #334155;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      text-align: center;
+      margin-bottom: 2rem;
     }
 
     header h1 {
-      font-size: 1.25rem;
-      font-weight: 600;
-      letter-spacing: -0.01em;
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #f1f5f9;
+      margin-bottom: 0.25rem;
     }
 
-    #timer {
-      font-family: "SF Mono", "Cascadia Code", "Consolas", monospace;
-      font-size: 1.1rem;
+    header p {
       color: #94a3b8;
+      font-size: 0.95rem;
     }
 
-    main {
-      width: 100%;
-      max-width: 720px;
-      padding: 2rem 1.5rem;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
+    .timer {
+      font-family: 'Courier New', monospace;
+      font-size: 2.5rem;
+      font-weight: 600;
+      color: #38bdf8;
+      margin-top: 1rem;
+      letter-spacing: 0.05em;
     }
 
-    .controls {
+    /* Control Bar */
+    .control-bar {
       display: flex;
       gap: 0.75rem;
+      justify-content: center;
+      flex-wrap: wrap;
       margin-bottom: 1.5rem;
     }
 
     button {
-      padding: 0.6rem 1.5rem;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
       border: none;
-      border-radius: 6px;
-      font-size: 0.95rem;
-      font-weight: 500;
+      border-radius: 8px;
+      padding: 0.625rem 1.5rem;
       cursor: pointer;
-      transition: background 0.15s, opacity 0.15s;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+
+    button:active:not(:disabled) {
+      transform: scale(0.97);
     }
 
     button:disabled {
@@ -69,104 +85,101 @@
       cursor: not-allowed;
     }
 
-    #btn-start {
-      background: #22c55e;
-      color: #052e16;
+    .btn-start {
+      background: #4ade80;
+      color: #0f172a;
     }
-    #btn-start:hover:not(:disabled) { background: #16a34a; }
 
-    #btn-log {
-      background: #3b82f6;
-      color: #fff;
+    .btn-stop {
+      background: #f87171;
+      color: #0f172a;
     }
-    #btn-log:hover:not(:disabled) { background: #2563eb; }
 
-    #btn-stop {
-      background: #ef4444;
-      color: #fff;
+    .btn-log {
+      background: #38bdf8;
+      color: #0f172a;
     }
-    #btn-stop:hover:not(:disabled) { background: #dc2626; }
 
-    /* Modal */
-    .modal-overlay {
+    .btn-add {
+      background: #38bdf8;
+      color: #0f172a;
+    }
+
+    .btn-cancel {
+      background: #334155;
+      color: #f1f5f9;
+    }
+
+    /* Note Input Area */
+    .note-input-area {
       display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.6);
-      z-index: 100;
-      align-items: center;
-      justify-content: center;
-    }
-    .modal-overlay.active { display: flex; }
-
-    .modal {
       background: #1e293b;
       border: 1px solid #334155;
       border-radius: 10px;
-      padding: 1.5rem;
-      width: 90%;
-      max-width: 480px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
     }
 
-    .modal h2 {
-      font-size: 1rem;
-      margin-bottom: 1rem;
+    .note-input-area.visible {
+      display: block;
     }
 
-    .modal textarea {
-      width: 100%;
-      min-height: 100px;
-      padding: 0.75rem;
-      background: #0f172a;
-      border: 1px solid #475569;
-      border-radius: 6px;
-      color: #e2e8f0;
-      font-family: inherit;
-      font-size: 0.95rem;
-      resize: vertical;
-    }
-
-    .modal textarea:focus {
-      outline: none;
-      border-color: #3b82f6;
-    }
-
-    .modal-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 0.5rem;
-      margin-top: 1rem;
-    }
-
-    .modal-actions button {
-      padding: 0.5rem 1.25rem;
-      font-size: 0.875rem;
-    }
-
-    #btn-modal-cancel {
-      background: #334155;
-      color: #e2e8f0;
-    }
-
-    #btn-modal-save {
-      background: #3b82f6;
-      color: #fff;
-    }
-
-    /* Log table */
-    .log-section h2 {
+    .note-input-area label {
+      display: block;
       font-size: 0.85rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: #64748b;
+      font-weight: 500;
+      color: #94a3b8;
+      margin-bottom: 0.5rem;
+    }
+
+    .note-input-area textarea {
+      width: 100%;
+      min-height: 80px;
+      background: #0f172a;
+      color: #f1f5f9;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 0.75rem;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      resize: vertical;
       margin-bottom: 0.75rem;
     }
 
-    .log-table-wrapper {
-      flex: 1;
+    .note-input-area textarea::placeholder {
+      color: #94a3b8;
+    }
+
+    .note-input-area textarea:focus {
+      outline: none;
+      border-color: #38bdf8;
+    }
+
+    .note-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    /* Log Table */
+    .log-section {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .log-section caption {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      font-weight: 600;
+      font-size: 1rem;
+      color: #f1f5f9;
+      border-bottom: 1px solid #334155;
+    }
+
+    .table-wrapper {
+      max-height: 400px;
       overflow-y: auto;
-      border: 1px solid #1e293b;
-      border-radius: 8px;
     }
 
     table {
@@ -179,243 +192,332 @@
       top: 0;
       background: #1e293b;
       text-align: left;
-      padding: 0.6rem 1rem;
+      padding: 0.6rem 0.75rem;
       font-size: 0.8rem;
+      font-weight: 600;
+      color: #94a3b8;
       text-transform: uppercase;
       letter-spacing: 0.04em;
-      color: #94a3b8;
       border-bottom: 1px solid #334155;
     }
 
     tbody td {
-      padding: 0.6rem 1rem;
-      font-size: 0.9rem;
-      border-bottom: 1px solid #1e293b;
+      padding: 0.6rem 0.75rem;
+      font-size: 0.85rem;
+      border-bottom: 1px solid #334155;
       vertical-align: top;
     }
 
-    tbody tr:hover { background: #1e293b; }
+    tbody td.col-num {
+      color: #94a3b8;
+      width: 3rem;
+      text-align: center;
+    }
 
-    td.col-num { width: 3rem; color: #64748b; }
-    td.col-time { width: 10rem; font-family: monospace; white-space: nowrap; color: #94a3b8; }
-    td.col-elapsed { width: 7rem; font-family: monospace; white-space: nowrap; color: #94a3b8; }
+    tbody td.col-time {
+      font-family: 'Courier New', monospace;
+      font-size: 0.8rem;
+      white-space: nowrap;
+      color: #94a3b8;
+    }
+
+    tbody td.col-elapsed {
+      font-family: 'Courier New', monospace;
+      font-size: 0.8rem;
+      white-space: nowrap;
+      color: #38bdf8;
+    }
+
+    tbody td.col-note {
+      color: #f1f5f9;
+      word-break: break-word;
+    }
+
+    tbody tr {
+      animation: fadeIn 0.3s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
 
     .empty-state {
+      padding: 2rem 1rem;
       text-align: center;
-      padding: 3rem 1rem;
-      color: #475569;
+      color: #94a3b8;
+      font-size: 0.9rem;
+    }
+
+    /* Scrollbar */
+    .table-wrapper::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .table-wrapper::-webkit-scrollbar-track {
+      background: #1e293b;
+    }
+
+    .table-wrapper::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 3px;
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      body {
+        padding: 1rem 0.75rem;
+      }
+
+      header h1 {
+        font-size: 1.4rem;
+      }
+
+      .timer {
+        font-size: 2rem;
+      }
+
+      .control-bar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .control-bar button {
+        width: 100%;
+      }
+
+      thead th, tbody td {
+        padding: 0.5rem;
+        font-size: 0.78rem;
+      }
+    }
+
+    @media (min-width: 481px) and (max-width: 768px) {
+      body {
+        padding: 1.5rem 1.25rem;
+      }
     }
   </style>
 </head>
 <body>
+  <div class="container">
+    <header>
+      <h1>Production Logger</h1>
+      <p>Track your session notes with timestamps</p>
+      <div class="timer" id="timer" aria-live="polite">00:00:00</div>
+    </header>
 
-<header>
-  <h1>Production Logger</h1>
-  <span id="timer">00:00:00</span>
-</header>
+    <main>
+      <section class="control-bar" aria-label="Session controls">
+        <button class="btn-start" id="btnStart" aria-label="Start session">Start</button>
+        <button class="btn-stop" id="btnStop" aria-label="Stop session and export CSV" disabled>Stop</button>
+        <button class="btn-log" id="btnLog" aria-label="Log a new note" disabled>Log</button>
+      </section>
 
-<main>
-  <div class="controls">
-    <button id="btn-start">Start</button>
-    <button id="btn-log" disabled>Log</button>
-    <button id="btn-stop" disabled>Stop</button>
+      <section class="note-input-area" id="noteInputArea" aria-label="Add a note">
+        <label for="noteText">New note</label>
+        <textarea id="noteText" placeholder="Enter your note…"></textarea>
+        <div class="note-actions">
+          <button class="btn-add" id="btnAddNote" aria-label="Add note to log">Add Note</button>
+          <button class="btn-cancel" id="btnCancel" aria-label="Cancel adding note">Cancel</button>
+        </div>
+      </section>
+
+      <section class="log-section" aria-label="Session log">
+        <table>
+          <caption>Session Log</caption>
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Timestamp</th>
+              <th scope="col">Elapsed</th>
+              <th scope="col">Note</th>
+            </tr>
+          </thead>
+        </table>
+        <div class="table-wrapper" id="tableWrapper">
+          <table>
+            <tbody id="logBody"></tbody>
+          </table>
+          <div class="empty-state" id="emptyState">
+            No logs yet. Start a session and click Log to add notes.
+          </div>
+        </div>
+      </section>
+    </main>
   </div>
 
-  <div class="log-section">
-    <h2>Session Log</h2>
-    <div class="log-table-wrapper">
-      <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Timestamp</th>
-            <th>Elapsed</th>
-            <th>Note</th>
-          </tr>
-        </thead>
-        <tbody id="log-body">
-          <tr class="empty-state-row">
-            <td colspan="4" class="empty-state">Press Start to begin a session.</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</main>
+  <script>
+    (function () {
+      'use strict';
 
-<!-- Note input modal -->
-<div class="modal-overlay" id="modal">
-  <div class="modal">
-    <h2>Add Log Entry</h2>
-    <textarea id="note-input" placeholder="Enter your note..."></textarea>
-    <div class="modal-actions">
-      <button id="btn-modal-cancel">Cancel</button>
-      <button id="btn-modal-save">Save</button>
-    </div>
-  </div>
-</div>
+      const btnStart = document.getElementById('btnStart');
+      const btnStop = document.getElementById('btnStop');
+      const btnLog = document.getElementById('btnLog');
+      const btnAddNote = document.getElementById('btnAddNote');
+      const btnCancel = document.getElementById('btnCancel');
+      const noteInputArea = document.getElementById('noteInputArea');
+      const noteText = document.getElementById('noteText');
+      const timerDisplay = document.getElementById('timer');
+      const logBody = document.getElementById('logBody');
+      const emptyState = document.getElementById('emptyState');
+      const tableWrapper = document.getElementById('tableWrapper');
 
-<script>
-  const btnStart = document.getElementById("btn-start");
-  const btnLog = document.getElementById("btn-log");
-  const btnStop = document.getElementById("btn-stop");
-  const timerDisplay = document.getElementById("timer");
-  const logBody = document.getElementById("log-body");
-  const modal = document.getElementById("modal");
-  const noteInput = document.getElementById("note-input");
-  const btnModalCancel = document.getElementById("btn-modal-cancel");
-  const btnModalSave = document.getElementById("btn-modal-save");
+      let sessionActive = false;
+      let timerInterval = null;
+      let sessionStartTime = null;
+      let entryCount = 0;
+      let entries = [];
 
-  let sessionStart = null;
-  let timerInterval = null;
-  let entries = [];
+      function formatDuration(ms) {
+        const totalSeconds = Math.floor(ms / 1000);
+        const h = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+        const m = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+        const s = String(totalSeconds % 60).padStart(2, '0');
+        return h + ':' + m + ':' + s;
+      }
 
-  function pad(n) {
-    return String(n).padStart(2, "0");
-  }
+      function updateTimer() {
+        if (!sessionStartTime) return;
+        const elapsed = Date.now() - sessionStartTime;
+        timerDisplay.textContent = formatDuration(elapsed);
+      }
 
-  function formatElapsed(ms) {
-    const totalSec = Math.floor(ms / 1000);
-    const h = Math.floor(totalSec / 3600);
-    const m = Math.floor((totalSec % 3600) / 60);
-    const s = totalSec % 60;
-    return `${pad(h)}:${pad(m)}:${pad(s)}`;
-  }
+      function startSession() {
+        sessionActive = true;
+        sessionStartTime = Date.now();
+        entryCount = 0;
+        entries = [];
+        logBody.innerHTML = '';
+        emptyState.style.display = '';
+        timerDisplay.textContent = '00:00:00';
 
-  function formatTimestamp(date) {
-    return date.toLocaleString("en-US", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: false,
-    });
-  }
+        timerInterval = setInterval(updateTimer, 1000);
 
-  function updateTimer() {
-    if (!sessionStart) return;
-    timerDisplay.textContent = formatElapsed(Date.now() - sessionStart);
-  }
+        btnStart.disabled = true;
+        btnStop.disabled = false;
+        btnLog.disabled = false;
+      }
 
-  function clearLog() {
-    logBody.innerHTML = "";
-  }
+      function stopSession() {
+        sessionActive = false;
+        clearInterval(timerInterval);
+        timerInterval = null;
 
-  function renderEntry(entry, index) {
-    const tr = document.createElement("tr");
-    tr.innerHTML =
-      `<td class="col-num">${index + 1}</td>` +
-      `<td class="col-time">${formatTimestamp(entry.timestamp)}</td>` +
-      `<td class="col-elapsed">${formatElapsed(entry.elapsed)}</td>` +
-      `<td>${escapeHtml(entry.note)}</td>`;
-    logBody.appendChild(tr);
-  }
+        if (entries.length > 0) {
+          exportCSV();
+        }
 
-  function escapeHtml(text) {
-    const div = document.createElement("div");
-    div.textContent = text;
-    return div.innerHTML;
-  }
+        sessionStartTime = null;
+        timerDisplay.textContent = '00:00:00';
+        hideNoteInput();
 
-  function escapeCsvField(value) {
-    const str = String(value);
-    if (str.includes(",") || str.includes('"') || str.includes("\n")) {
-      return '"' + str.replace(/"/g, '""') + '"';
-    }
-    return str;
-  }
+        btnStart.disabled = false;
+        btnStop.disabled = true;
+        btnLog.disabled = true;
+      }
 
-  function downloadCsv() {
-    const rows = [["#", "Timestamp", "Elapsed", "Note"]];
-    entries.forEach((e, i) => {
-      rows.push([
-        i + 1,
-        formatTimestamp(e.timestamp),
-        formatElapsed(e.elapsed),
-        e.note,
-      ]);
-    });
+      function showNoteInput() {
+        noteInputArea.classList.add('visible');
+        noteText.value = '';
+        noteText.focus();
+      }
 
-    const csv = rows.map((r) => r.map(escapeCsvField).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
+      function hideNoteInput() {
+        noteInputArea.classList.remove('visible');
+        noteText.value = '';
+      }
 
-    const a = document.createElement("a");
-    const dateStr = new Date().toISOString().slice(0, 19).replace(/[T:]/g, "-");
-    a.href = url;
-    a.download = `production-log-${dateStr}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
+      function addNote() {
+        const text = noteText.value.trim();
+        if (!text || !sessionActive) return;
 
-  // --- Event handlers ---
+        entryCount++;
+        const now = new Date();
+        const elapsed = Date.now() - sessionStartTime;
 
-  btnStart.addEventListener("click", () => {
-    sessionStart = Date.now();
-    entries = [];
-    clearLog();
+        const entry = {
+          num: entryCount,
+          timestamp: now.toLocaleString(),
+          elapsed: formatDuration(elapsed),
+          note: text,
+        };
+        entries.push(entry);
 
-    btnStart.disabled = true;
-    btnLog.disabled = false;
-    btnStop.disabled = false;
+        emptyState.style.display = 'none';
 
-    timerDisplay.textContent = "00:00:00";
-    timerInterval = setInterval(updateTimer, 1000);
-  });
+        const tr = document.createElement('tr');
+        tr.innerHTML =
+          '<td class="col-num">' + escapeHTML(String(entry.num)) + '</td>' +
+          '<td class="col-time">' + escapeHTML(entry.timestamp) + '</td>' +
+          '<td class="col-elapsed">' + escapeHTML(entry.elapsed) + '</td>' +
+          '<td class="col-note">' + escapeHTML(entry.note) + '</td>';
+        logBody.appendChild(tr);
 
-  btnLog.addEventListener("click", () => {
-    noteInput.value = "";
-    modal.classList.add("active");
-    noteInput.focus();
-  });
+        tableWrapper.scrollTop = tableWrapper.scrollHeight;
 
-  btnModalCancel.addEventListener("click", () => {
-    modal.classList.remove("active");
-  });
+        hideNoteInput();
+      }
 
-  btnModalSave.addEventListener("click", () => {
-    const note = noteInput.value.trim();
-    if (!note) return;
+      function escapeHTML(str) {
+        var div = document.createElement('div');
+        div.appendChild(document.createTextNode(str));
+        return div.innerHTML;
+      }
 
-    const now = new Date();
-    const entry = {
-      timestamp: now,
-      elapsed: now.getTime() - sessionStart,
-      note: note,
-    };
-    entries.push(entry);
-    renderEntry(entry, entries.length - 1);
+      function escapeCSVField(field) {
+        var str = String(field);
+        if (str.indexOf(',') !== -1 || str.indexOf('"') !== -1 || str.indexOf('\n') !== -1) {
+          return '"' + str.replace(/"/g, '""') + '"';
+        }
+        return str;
+      }
 
-    modal.classList.remove("active");
-  });
+      function exportCSV() {
+        var rows = ['Entry #,Timestamp (Local),Elapsed Time,Note'];
+        for (var i = 0; i < entries.length; i++) {
+          var e = entries[i];
+          rows.push(
+            escapeCSVField(e.num) + ',' +
+            escapeCSVField(e.timestamp) + ',' +
+            escapeCSVField(e.elapsed) + ',' +
+            escapeCSVField(e.note)
+          );
+        }
+        var csvContent = rows.join('\n');
 
-  // Save on Enter (Shift+Enter for newline)
-  noteInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      btnModalSave.click();
-    }
-  });
+        var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        var url = URL.createObjectURL(blob);
 
-  // Close modal on overlay click
-  modal.addEventListener("click", (e) => {
-    if (e.target === modal) modal.classList.remove("active");
-  });
+        var now = new Date();
+        var y = now.getFullYear();
+        var mo = String(now.getMonth() + 1).padStart(2, '0');
+        var d = String(now.getDate()).padStart(2, '0');
+        var filename = 'session-log-' + y + '-' + mo + '-' + d + '.csv';
 
-  btnStop.addEventListener("click", () => {
-    clearInterval(timerInterval);
+        var link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }
 
-    btnStart.disabled = false;
-    btnLog.disabled = true;
-    btnStop.disabled = true;
+      // Event listeners
+      btnStart.addEventListener('click', startSession);
+      btnStop.addEventListener('click', stopSession);
+      btnLog.addEventListener('click', showNoteInput);
+      btnAddNote.addEventListener('click', addNote);
+      btnCancel.addEventListener('click', hideNoteInput);
 
-    if (entries.length > 0) {
-      downloadCsv();
-    }
-  });
-</script>
-
+      noteText.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          addNote();
+        }
+      });
+    })();
+  </script>
 </body>
 </html>
